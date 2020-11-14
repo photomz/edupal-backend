@@ -29,13 +29,12 @@ const joinMeeting = async (
       .promise(),
     docClient
       .put({
-        // Connection
+        // Class Meta
         TableName: process.env.db,
         Item: {
           pk,
-          sk: pk,
-          startedAt: now,
-          endedAt: null,
+          sk: "META",
+          time: { start: now, end: null },
           classId: null,
         },
       })
@@ -45,12 +44,12 @@ const joinMeeting = async (
         // User Information
         TableName: process.env.db,
         ExpressionAttributeNames: {
-          "#sk": `USER#${role}`,
+          "#sk": `USER#${role}#${meetingId}#${userId}`,
         },
         ConditionExpression: "attribute_not_exists(#sk)",
         Item: {
           pk,
-          sk: `USER#${role}#${userId}`,
+          sk: `USER#${role}#${meetingId}#${userId}`,
           classId: null,
           coinTotal: 0,
           name,

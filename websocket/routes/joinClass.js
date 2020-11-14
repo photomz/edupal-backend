@@ -7,21 +7,22 @@ const { docClient } = require("../util");
  */
 const joinClass = async ({ meetingId, userId, classId, name }) => {
   // No transactwrite because user info may exist if user drops off from call
+  const sk = `USER#STUDENT#${meetingId}#${userId}`;
   const batchConditionalPut = [
     docClient
       .update({
-        // Connection
+        // Meeting PK
         TableName: process.env.db,
-        Key: { pk: `MEETING#${meetingId}`, sk: `USER#STUDENT#${userId}` },
+        Key: { pk: `MEETING#${meetingId}`, sk },
         ExpressionAttributeValues: { ":class": classId },
-        ExpressionAttributeNames: { "#sk": `USER#STUDENT#${userId}` },
+        ExpressionAttributeNames: { "#sk": sk },
         ConditionExpression: "attribute_exists(#sk)",
         UpdateExpression: "SET classId = :class",
       })
       .promise(),
     docClient
       .put({
-        // User Information
+        // Create Class PK if new user
         TableName: process.env.db,
         ExpressionAttributeNames: {
           "#sk": `USER#STUDENT#${userId}`,
