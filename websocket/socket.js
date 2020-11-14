@@ -1,88 +1,88 @@
-/* eslint-disable no-undef */
-const AWS = require("aws-sdk");
+const {
+  ask,
+  disconnect,
+  joinClass,
+  joinMeeting,
+  ping,
+  respond,
+  setClass,
+} = require("./routes");
+const { typed } = require("./util");
 
-AWS.config.update({ region: process.env.AWS_REGION });
-const DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
-const DDBDoc = new AWS.DynamoDB.DocumentClient({ apiVersion: "2012-08-10" });
+const DateType = {
+  Date: {
+    typeOf: "String",
+    validate: (el) => !Number.isNaN(new Date(el).getTime()),
+  },
+};
 
-on("join", async (data, socket) => {
-  const params = {
-    TableName: process.env.connectionDb,
-    Item: {
-      connectionID: { S: socket.id },
-      meetingID: { S: data.id },
-      connectedAt: { S: new Date().toString() },
+// eslint-disable-next-line no-undef
+on("ask", async (data, socket) => {
+  typed(
+    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String | Null, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, meta: {answer: String | [String] | Null, optionNum: Int | Null, options: [String|Int] | Null}, askTimestamp: Date, questionId: String",
+    data,
+    {
+      customTypes: {
+        ...DateType,
+        Enum: {
+          typeOf: "String",
+          validate: (el) =>
+            ["True/False", "MCQ", "Option", "Short Answer"].includes(el),
+        },
+      },
+    }
+  );
+  await ask(data, socket);
+});
+
+// eslint-disable-next-line no-undef
+on("disconnect", async (data, socket) => {
+  typed(
+    "Undefined | {meetingId: String, connectionId: String, classId: String | Null, studentId: String}",
+    data
+  );
+  await disconnect(data, socket);
+});
+
+// eslint-disable-next-line no-undef
+on("joinClass", async (data, socket) => {
+  typed("{userId: String, classId: String, meetingId: String}", data);
+  await joinClass(data, socket);
+});
+
+// eslint-disable-next-line no-undef
+on("joinMeeting", async (data, socket) => {
+  const custom = {
+    customTypes: {
+      Enum: {
+        typeOf: "String",
+        validate: (el) => ["STUDENT", "TEACHER"].includes(el),
+      },
     },
   };
-  try {
-    await DDB.putItem(params).promise();
-  } catch (error) {
-    throw new Error(error);
-  }
-
-  const team = data.team ? data.team : "none";
-
-  const teamParams = {
-    TableName: process.env.teamsDb,
-    Key: { teamName: { S: team } },
-    ExpressionAttributeValues: { ":inc": { N: "1" } },
-    UpdateExpression: "ADD connectionCount :inc",
-  };
-  try {
-    await DDB.updateItem(teamParams).promise();
-  } catch (error) {
-    throw new Error(error);
-  }
+  typed("{meetingId: String, role: Enum, userId: String}", data, custom);
+  await joinMeeting(data, socket);
 });
 
-on("disconnect", async (data, socket) => {
-  if (data && data.id) {
-    const params = {
-      TableName: process.env.connectionDb,
-      Key: {
-        connectionID: { S: socket.id },
-        meetingID: { S: data.id },
-      },
-    };
-    try {
-      await DDB.deleteItem(params).promise();
-    } catch (error) {
-      throw new Error("DISCONNECTION ERROR", error);
-    }
-  }
-});
-
-on("ping", async (data, socket) => {
-  try {
-    await socket.send(JSON.stringify({ action: "PING" }), socket.id);
-  } catch (err) {
-    console.log("Ping failed - old DB");
-  }
-});
-
+// eslint-disable-next-line no-undef
 on("default", async (data, socket) => {
-  const parsedData = JSON.parse(data);
-  try {
-    const connectionData = await DDBDoc.query({
-      TableName: process.env.connectionDb,
-      IndexName: "meetingIndex",
-      ProjectionExpression: "connectionID",
-      KeyConditionExpression: "meetingID = :meetingID",
-      ExpressionAttributeValues: {
-        ":meetingID": parsedData.message.id,
-      },
-    }).promise();
-    const connections = connectionData.Items.filter(
-      (item) => item.connectionID !== socket.id
-    );
-    for ( const { connectionID } of connections) {
-      try {
-        await socket.send(data, connectionID);
-      } catch (error) {
-        console.log("Message could not be sent - CLIENT DISCONNECTED");
-      }
-    }
-  } catch (error) {
-    throw new Error(error);
-  }
+  typed("undefined", data);
+  await ping(data, socket);
+});
+
+// eslint-disable-next-line no-undef
+on("respond", async (data, socket) => {
+  typed(
+    // Custom date
+    "{student: {name : String, id: String}, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: Date",
+    data,
+    { customTypes: DateType }
+  );
+  await respond(data, socket);
+});
+
+// eslint-disable-next-line no-undef
+on("setClass", async (data, socket) => {
+  typed("{classId: String, userId: String, meetingId: String}", data);
+  await setClass(data, socket);
 });
