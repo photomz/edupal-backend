@@ -46,7 +46,10 @@ on("disconnect", async (data, socket) => {
 
 // eslint-disable-next-line no-undef
 on("joinClass", async (data, socket) => {
-  typed("{userId: String, classId: String, meetingId: String}", data);
+  typed(
+    "{userId: String, classId: String, meetingId: String, name: String}",
+    data
+  );
   await joinClass(data, socket);
 });
 

@@ -8,24 +8,48 @@ const { docClient } = require("../util");
  * @param {*} socket
  */
 const joinMeeting = async (
-  { meetingId, role, userId },
+  { meetingId, role, userId, name },
   { id: connectionId }
 ) => {
-  const params = {
-    TableName: process.env.db,
-    ExpressionAttributeNames: {
-      "#sk": "META",
-    },
-    ConditionExpression: "attribute_not_exists(#sk)",
-    Item: {
-      pk: `MEETING#${meetingId}`,
-      sk: `CONN#${role}#${connectionId}`,
-      userId,
-      connectedAt: new Date().toISOString(),
-    },
-  };
+  // No transactwrite because user info may exist if user drops off from call
+  const batchConditionalPut = [
+    docClient
+      .put({
+        // Connection
+        TableName: process.env.db,
+        ExpressionAttributeNames: {
+          "#sk": "META",
+        },
+        ConditionExpression: "attribute_not_exists(#sk)",
+        Item: {
+          pk: `MEETING#${meetingId}`,
+          sk: `CONN#${role}#${connectionId}`,
+          userId,
+          connectedAt: new Date().toISOString(),
+        },
+      })
+      .promise(),
+    docClient
+      .put({
+        // User Information
+        TableName: process.env.db,
+        ExpressionAttributeNames: {
+          "#sk": `USER#${role}`,
+        },
+        ConditionExpression: "attribute_not_exists(#sk)",
+        Item: {
+          pk: `MEETING#${meetingId}`,
+          sk: `USER#${role}#${userId}`,
+          classId: null,
+          coinTotal: 0,
+          name,
+          gamification: { correctStreak: 0 },
+        },
+      })
+      .promise(),
+  ];
 
-  await docClient.put(params).promise();
+  await Promise.all(batchConditionalPut);
 };
 
 module.exports = joinMeeting;

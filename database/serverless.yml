@@ -15,6 +15,7 @@ inputs:
     - AttributeName: classId
       AttributeType: S
     - AttributeName: coinTotal
+      AttributeType: N
   keySchema:
     - AttributeName: pk
       KeyType: HASH
