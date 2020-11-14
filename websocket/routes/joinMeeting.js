@@ -11,21 +11,31 @@ const joinMeeting = async (
   { meetingId, role, userId, name },
   { id: connectionId }
 ) => {
+  const now = new Date().toISOString();
   // No transactwrite because user info may exist if user drops off from call
   const batchConditionalPut = [
     docClient
       .put({
         // Connection
         TableName: process.env.db,
-        ExpressionAttributeNames: {
-          "#sk": "META",
-        },
-        ConditionExpression: "attribute_not_exists(#sk)",
         Item: {
           pk: `MEETING#${meetingId}`,
           sk: `CONN#${role}#${connectionId}`,
           userId,
-          connectedAt: new Date().toISOString(),
+          connectedAt: now,
+        },
+      })
+      .promise(),
+    docClient
+      .put({
+        // Connection
+        TableName: process.env.db,
+        Item: {
+          pk: `MEETING#${meetingId}`,
+          sk: "META",
+          startedAt: now,
+          endedAt: null,
+          classId: null,
         },
       })
       .promise(),
