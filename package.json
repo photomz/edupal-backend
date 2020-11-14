@@ -1,0 +1,30 @@
+{
+  "name": "edupal-backend",
+  "version": "0.0.1",
+  "description": "Stride is a novel and redesigned fitness game for the youth and middle-aged alike.",
+  "main": "app.js",
+  "repository": "https://github.com/photomz/stride",
+  "author": "Edu-pal Group <edupal.group@gmail.com>",
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "^2.736.0",
+    "axios": "^0.20.0",
+    "uuid": "^8.3.0"
+  },
+  "scripts": {
+    "dev": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "devDependencies": {
+    "aws-sdk-mock": "^5.1.0",
+    "babel-eslint": "^10.1.0",
+    "babel-preset-airbnb": "^5.0.0",
+    "eslint": "^7.7.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "jest": "^26.6.3",
+    "prettier": "^2.0.5"
+  }
+}

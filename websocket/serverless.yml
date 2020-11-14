@@ -1,0 +1,15 @@
+websocketApi:
+  component: "@serverless/backend-socket"
+  name: websocket
+  inputs:
+    name: ${name}-${stage}
+    region: ap-southeast-1
+    memory: 128
+    timeout: 10
+    env:
+      db: ${output:database.name}
+      dbClassIndex: ${output:database.indexes.ClassIndex.name}
+      dbLeaderboardIndex: ${output:database.indexes.LeaderboardIndex.name}
+      dbReverseIndex: ${output:database.indexes.ReverseIndex.name}
+    code:
+      src: ./
