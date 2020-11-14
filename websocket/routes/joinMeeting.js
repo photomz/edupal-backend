@@ -4,12 +4,14 @@ const { docClient } = require("../util");
  * Automatically triggered upon entering Google Meet meeting
  * Adds ConnectionID to table and create temporary leaderboard
  * Subscribes user to messages in meeting
+ * Inits meeting META if first meeting joiner
+ * Emits getClass if classId not null
  * @param {*} data
  * @param {*} socket
  */
 const joinMeeting = async (
   { meetingId, role, userId, name },
-  { id: connectionId }
+  { send, id: connectionId }
 ) => {
   const now = new Date().toISOString();
   const pk = `MEETING#${meetingId}`;
@@ -31,6 +33,8 @@ const joinMeeting = async (
       .put({
         // Class Meta
         TableName: process.env.db,
+        ExpressionAttributeNames: { "#sk": "META" },
+        ConditionExpression: "attribute_not_exists(#sk)",
         Item: {
           pk,
           sk: "META",
@@ -60,6 +64,24 @@ const joinMeeting = async (
   ];
 
   await Promise.all(batchConditionalPut);
+
+  const getParams = {
+    TableName: process.env.db,
+    Key: { pk, sk: "META" },
+    ProjectionExpression: "classId",
+  };
+
+  const { classId } = (await docClient.get(getParams).promise()).Item;
+
+  if (classId !== null) {
+    const payload = { action: "getClass", data: { classId } };
+    try {
+      await send(JSON.stringify(payload), connectionId);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log(err);
+    }
+  }
 };
 
 module.exports = joinMeeting;

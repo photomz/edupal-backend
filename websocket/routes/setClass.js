@@ -1,11 +1,12 @@
-const { docClient } = require("../util");
+const { docClient, queryUsers, emitForEach } = require("../util");
 
 /**
  * Teacher action to assign the current meeting to a Class for persistent recording
+ * Emits getClass to all students
  * @param {*} data
  * @param {*} socket
  */
-const setClass = async ({ meetingId, userId, classId }) => {
+const setClass = async ({ meetingId, userId, classId }, socket) => {
   const UpdateParams = (sk) => ({
     Update: {
       TableName: process.env.db,
@@ -14,7 +15,8 @@ const setClass = async ({ meetingId, userId, classId }) => {
       UpdateExpression: "SET classId = :class",
     },
   });
-  await docClient
+
+  const transactPromise = docClient
     .transactWrite({
       TransactItems: [
         UpdateParams("META"),
@@ -22,6 +24,13 @@ const setClass = async ({ meetingId, userId, classId }) => {
       ],
     })
     .promise();
+
+  const connections = (
+    await Promise.all([queryUsers("student", meetingId), transactPromise])
+  )[0];
+
+  const payload = { action: "getClass", data: { classId } };
+  emitForEach(connections, payload, socket);
 };
 
 module.exports = setClass;
