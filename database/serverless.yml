@@ -37,6 +37,8 @@ inputs:
           - coinTotal
           - name
           - gamification
+          - time
+          - attendance
         ProjectionType: INCLUDE
     - IndexName: LeaderboardIndex
       KeySchema:

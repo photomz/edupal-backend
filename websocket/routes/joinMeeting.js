@@ -12,6 +12,7 @@ const joinMeeting = async (
   { id: connectionId }
 ) => {
   const now = new Date().toISOString();
+  const pk = `MEETING#${meetingId}`;
   // No transactwrite because user info may exist if user drops off from call
   const batchConditionalPut = [
     docClient
@@ -19,7 +20,7 @@ const joinMeeting = async (
         // Connection
         TableName: process.env.db,
         Item: {
-          pk: `MEETING#${meetingId}`,
+          pk,
           sk: `CONN#${role}#${connectionId}`,
           userId,
           connectedAt: now,
@@ -31,8 +32,8 @@ const joinMeeting = async (
         // Connection
         TableName: process.env.db,
         Item: {
-          pk: `MEETING#${meetingId}`,
-          sk: "META",
+          pk,
+          sk: pk,
           startedAt: now,
           endedAt: null,
           classId: null,
@@ -48,7 +49,7 @@ const joinMeeting = async (
         },
         ConditionExpression: "attribute_not_exists(#sk)",
         Item: {
-          pk: `MEETING#${meetingId}`,
+          pk,
           sk: `USER#${role}#${userId}`,
           classId: null,
           coinTotal: 0,
