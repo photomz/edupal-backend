@@ -1,12 +1,11 @@
 /**
- * User action to join the set class in the meeting by the teacher
- * Lets Edupal record and persist data after meeting ends for dashboard
- * @param {*} data
+ * Ping websocket connection to keep alive
+ * @param {*} _
  * @param {*} socket
  */
 const ping = async (_, socket) => {
   try {
-    await socket.send(JSON.stringify({ action: "PING" }), socket.id);
+    await socket.send(JSON.stringify({ action: "ping" }), socket.id);
   } catch (err) {
     throw new Error(`Ping failed with id ${socket.id} at ${new Date()}`, err);
   }
