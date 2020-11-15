@@ -1,5 +1,5 @@
-const { typeCheck } = require("type-check");
 const AWS = require("aws-sdk");
+const { typeCheck } = require("./type-check");
 
 AWS.config.update({
   region: process.env.AWS_REGION,

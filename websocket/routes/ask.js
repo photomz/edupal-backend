@@ -1,26 +1,38 @@
-async (data, socket) => {
-  const parsedData = JSON.parse(data);
-  try {
-    const connectionData = await DDBDoc.query({
-      TableName: process.env.connectionDb,
-      IndexName: "meetingIndex",
-      ProjectionExpression: "connectionID",
-      KeyConditionExpression: "meetingID = :meetingID",
-      ExpressionAttributeValues: {
-        ":meetingID": parsedData.message.id,
+const { AES } = require("../util/cryptojs");
+const { docClient, queryUsers, emitForEach } = require("../util");
+
+/**
+ * Teacher action of asking a question to students, emits message to each student
+ * @param {*} data
+ * @param {*} socket
+ */
+const ask = async ({ meetingId, ...res }, socket) => {
+  const { avatar, askTimestamp, questionId, ...putObject } = res;
+  const message = { ...res };
+  message.answer = AES.encrypt(message.answer, process.env.CRYPTO_SECRET);
+
+  const sk = `Q#${questionId}#${askTimestamp}`;
+  const putPromise = docClient
+    .put({
+      TableName: process.env.db,
+      ExpressionAtrributeNames: {
+        "#sk": sk,
       },
-    }).promise();
-    const connections = connectionData.Items.filter(
-      (item) => item.connectionID !== socket.id
-    );
-    for (const { connectionID } of connections) {
-      try {
-        await socket.send(data, connectionID);
-      } catch (error) {
-        console.log("Message could not be sent - CLIENT DISCONNECTED");
-      }
-    }
-  } catch (error) {
-    throw new Error(error);
-  }
+      ConditionExpression: "attribute_not_exists(#sk)",
+      Item: {
+        pk: `MEETING${meetingId}`,
+        sk,
+        ...putObject,
+      },
+    })
+    .promise();
+
+  const connections = (
+    await Promise.all([queryUsers("student", meetingId), putPromise])
+  )[0];
+
+  const payload = { action: "receiveAsk", data: message };
+  emitForEach(connections, payload, socket);
 };
+
+module.exports = ask;

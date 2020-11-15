@@ -1,15 +1,81 @@
+service: edupal
+version: v0.1
+stage: dev
+database:
+  component: "@serverless/aws-dynamodb"
+  inputs:
+    name: ${service}-${version}-${stage}
+    region: ap-southeast-1
+    # Don't delete the Database Table if "serverless remove" is run
+    deletionPolicy: retain
+    # Simple, single-table design
+    attributeDefinitions:
+      - AttributeName: pk
+        AttributeType: S
+      - AttributeName: sk
+        AttributeType: S
+      - AttributeName: classId
+        AttributeType: S
+      - AttributeName: coinTotal
+        AttributeType: N
+    keySchema:
+      - AttributeName: pk
+        KeyType: HASH
+      - AttributeName: sk
+        KeyType: RANGE
+    globalSecondaryIndexes:
+      - IndexName: ClassIndex
+        KeySchema:
+          - AttributeName: classId
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        Projection:
+          NonKeyAttributes:
+            - pk
+            - response
+            - question
+            - meta
+            - coinTotal
+            - name
+            - gamification
+          ProjectionType: INCLUDE
+      - IndexName: LeaderboardIndex
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: coinTotal
+            KeyType: RANGE
+        Projection:
+          NonKeyAttributes:
+            - sk
+            - classId
+            - name
+            - gamification
+          ProjectionType: INCLUDE
+      - IndexName: ReverseIndex
+        KeySchema:
+          - AttributeName: sk
+            KeyType: HASH
+          - AttributeName: pk
+            KeyType: RANGE
+        Projection:
+          NonKeyAttributes:
+            - classId
+            - coinTotal
+            - name
+            - gamification
+            - powerupsBought
+          ProjectionType: INCLUDE
+
 websocketApi:
   component: "@serverless/backend-socket"
-  name: websocket
   inputs:
-    name: ${name}-${stage}
-    region: ap-southeast-1
+    name: ${service}-${version}-${stage}
     memory: 128
     timeout: 10
     env:
-      db: ${output:database.name}
-      dbClassIndex: ${output:database.indexes.ClassIndex.name}
-      dbLeaderboardIndex: ${output:database.indexes.LeaderboardIndex.name}
-      dbReverseIndex: ${output:database.indexes.ReverseIndex.name}
+      db: ${database.name}
+      # CRYPTO_SECRET: ${param:CRYPTO_SECRET}
     code:
       src: ./
