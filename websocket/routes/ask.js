@@ -3,6 +3,7 @@ const { docClient, queryUsers, emitForEach } = require("../util");
 
 /**
  * Teacher action of asking a question to students, emits message to each student
+ * Answer in student emit is encrypted
  * @param {*} data
  * @param {*} socket
  */

@@ -1,6 +1,23 @@
-service: edupal
+service: edupal-backend
+app: edupal
+org: photonmz
 version: v0.1
 stage: dev
+region: ap-southeast-1
+
+websocketApi:
+  component: "@serverless/backend-socket"
+  inputs:
+    roleName: ${permissions.name}
+    name: ${service}-${version}-${stage}
+    memory: 128
+    timeout: 10
+    env:
+      db: ${database.name}
+      # CRYPTO_SECRET: ${param:CRYPTO_SECRET}
+    code:
+      src: ./
+
 database:
   component: "@serverless/aws-dynamodb"
   inputs:
@@ -68,14 +85,20 @@ database:
             - powerupsBought
           ProjectionType: INCLUDE
 
-websocketApi:
-  component: "@serverless/backend-socket"
+permissions:
+  component: "@serverless/aws-iam-role"
   inputs:
     name: ${service}-${version}-${stage}
-    memory: 128
-    timeout: 10
-    env:
-      db: ${database.name}
-      # CRYPTO_SECRET: ${param:CRYPTO_SECRET}
-    code:
-      src: ./
+    service: lambda.amazonaws.com
+    region: ap-southeast-1
+    policy: 
+      - Effect: Allow
+        Action:
+          - "dynamodb:Query"
+          - "dynamodb:GetItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:DeleteItem"
+        Resource:        
+          - arn:aws:dynamodb:${region}:account-id:table/${database.name}
+          - arn:aws:dynamodb:${region}:account-id:table/${database.name}/index/*
