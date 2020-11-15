@@ -24,7 +24,7 @@ const joinMeeting = async (
         Item: {
           pk,
           sk: `CONN#${role}#${connectionId}`,
-          userId,
+          user: { id: userId, name },
           connectedAt: now,
         },
       })

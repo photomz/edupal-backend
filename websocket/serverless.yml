@@ -14,7 +14,8 @@ websocketApi:
     timeout: 10
     env:
       db: ${database.name}
-      # CRYPTO_SECRET: ${param:CRYPTO_SECRET}
+      # Used for encrypting answers to questions nothing important so this is ok
+      CRYPTO_SECRET: fweuhrfwJAHFJKAWFHkjaaswklfhads329807
     code:
       src: ./
 

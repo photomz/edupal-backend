@@ -8,6 +8,7 @@ const {
   setClass,
 } = require("./routes");
 const { typed } = require("./util");
+const { typeCheck } = require("./util/type-check/lib");
 
 const DateType = {
   Date: {
@@ -16,10 +17,17 @@ const DateType = {
   },
 };
 
+const RoleType = {
+  Role: {
+    typeOf: "String",
+    validate: (el) => ["STUDENT", "TEACHER"].includes(el),
+  },
+};
+
 // eslint-disable-next-line no-undef
 on("ask", async (data, socket) => {
   typed(
-    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String | Null, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, meta: {answer: String | [String] | Null, optionNum: Int | Null, options: [String|Int] | Null}, askTimestamp: Date, questionId: String",
+    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String | Null, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, answer: JSONCustom, meta: {optionNum: Int | Null, options: [String|Int] | Null}, askTimestamp: Date, questionId: String",
     data,
     {
       customTypes: {
@@ -28,6 +36,14 @@ on("ask", async (data, socket) => {
           typeOf: "String",
           validate: (el) =>
             ["True/False", "MCQ", "Option", "Short Answer"].includes(el),
+        },
+        JSONCustom: {
+          typeOf: "String",
+          validate: (el) =>
+            typeCheck(
+              "String | Number | [String|Number] | null",
+              JSON.parse(el)
+            ),
         },
       },
     }
@@ -38,8 +54,9 @@ on("ask", async (data, socket) => {
 // eslint-disable-next-line no-undef
 on("disconnect", async (data, socket) => {
   typed(
-    "Undefined | {meetingId: String, connectionId: String, classId: String | Null, studentId: String}",
-    data
+    "Undefined | {meetingId: String, role: Role, classId: String | Null, userId: String}",
+    data,
+    { customTypes: { ...RoleType } }
   );
   await disconnect(data, socket);
 });
@@ -55,15 +72,9 @@ on("joinClass", async (data, socket) => {
 
 // eslint-disable-next-line no-undef
 on("joinMeeting", async (data, socket) => {
-  const custom = {
-    customTypes: {
-      Enum: {
-        typeOf: "String",
-        validate: (el) => ["STUDENT", "TEACHER"].includes(el),
-      },
-    },
-  };
-  typed("{meetingId: String, role: Enum, userId: String}", data, custom);
+  typed("{meetingId: String, role: Role, userId: String, name: String}", data, {
+    customTypes: { ...RoleType },
+  });
   await joinMeeting(data, socket);
 });
 
@@ -77,7 +88,7 @@ on("default", async (data, socket) => {
 on("respond", async (data, socket) => {
   typed(
     // Custom date
-    "{student: {name : String, id: String}, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: Date",
+    "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: Date",
     data,
     { customTypes: DateType }
   );

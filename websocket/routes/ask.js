@@ -1,4 +1,4 @@
-const { AES } = require("../util/cryptojs");
+const { AES } = require("../util/cryptojs/cryptojs");
 const { docClient, queryUsers, emitForEach } = require("../util");
 
 /**

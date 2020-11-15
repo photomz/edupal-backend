@@ -46,11 +46,7 @@ const queryUsers = async (role, meetingId) => {
     ProjectionExpression: "sk",
   });
 
-  const users = response.Items.map(
-    ({ sk }) => sk.split("#")[sk.split("#").length - 1]
-  );
-
-  return users;
+  return response.Items;
 };
 
 /**
@@ -60,7 +56,10 @@ const queryUsers = async (role, meetingId) => {
  * @param {*} socket
  */
 const emitForEach = async (connections, payload, socket) => {
-  const emitPromises = connections.map((el) =>
+  const cleanedConnections = connections.map(
+    ({ sk }) => sk.split("#")[sk.split("#").length - 1]
+  );
+  const emitPromises = cleanedConnections.map((el) =>
     (async (id) => {
       try {
         await socket.send(payload, id);
