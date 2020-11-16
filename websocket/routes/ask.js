@@ -33,7 +33,11 @@ const ask = async ({ meetingId, ...res }, socket) => {
   )[0];
 
   const payload = { action: "receiveAsk", data: message };
-  emitForEach(connections, payload, socket);
+  await emitForEach(connections, payload, socket);
+
+  return {
+    statusCode: 200,
+  };
 };
 
 module.exports = ask;

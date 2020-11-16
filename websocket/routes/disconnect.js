@@ -1,21 +1,23 @@
-const { docClient, emitForEach, queryUsers } = require("../util");
+const { docClient } = require("../util");
 
 /**
  * Triggered by endpoint to manually disconnect
  * @param {*} data
  * @param {*} socket
  */
-const disconnect = async ({ meetingId, role, userId, name, classId }) => {
+const disconnect = async (
+  { meetingId, role, userId, name, classId },
+  socket
+) => {
   const now = new Date().toISOString();
   const params = [
     {
-      Update: {
+      Delete: {
         TableName: process.env.db,
-        Key: { pk: `MEETING#${meetingId}`, sk: `CONN${role.toUpperCase()}` },
-        ExpressionAttributeValues: {
-          ":now": now,
+        Key: {
+          pk: `MEETING#${meetingId}`,
+          sk: `CONN#${role.toUpperCase()}#${userId}`,
         },
-        UpdateExpression: "SET time.end :now",
       },
     },
   ];
@@ -38,6 +40,11 @@ const disconnect = async ({ meetingId, role, userId, name, classId }) => {
   console.log(`${userId} ${name} from ${classId} has disconnected`);
   // TODO: Cut websocket connection
   // TODO: Emit to teachers and student of disconnection
+
+  return {
+    message: `You have disconnected at ${now}`,
+    statusCode: 200,
+  };
 };
 
 module.exports = disconnect;

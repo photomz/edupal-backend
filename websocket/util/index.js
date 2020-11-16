@@ -1,24 +1,9 @@
 const AWS = require("aws-sdk");
-const { typeCheck } = require("./type-check");
 
 AWS.config.update({
   region: process.env.AWS_REGION,
 });
 const docClient = new AWS.DynamoDB.DocumentClient();
-
-/**
- * Performs type checking and rejects if data does not adhere to schema
- * @param {String} schema
- * @param {*} vari
- * @param {*} options
- */
-const typed = (schema, vari, options) => {
-  const varname = Object.keys({ vari })[0];
-  if (!typeCheck(schema, vari, options))
-    throw new Error(
-      `Expected ${varname} to match schema ${schema} but found value ${vari} and type ${typeof vari}`
-    );
-};
 
 /**
  * Query all connected students or teachers in meeting
@@ -62,7 +47,7 @@ const emitForEach = async (connections, payload, socket) => {
   const emitPromises = cleanedConnections.map((el) =>
     (async (id) => {
       try {
-        await socket.send(payload, id);
+        await socket.send(JSON.stringify(payload), id);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.log("Message could not be sent - CLIENT DISCONNECTED");
@@ -74,7 +59,6 @@ const emitForEach = async (connections, payload, socket) => {
 
 module.exports = {
   docClient,
-  typed,
   queryUsers,
   emitForEach,
 };

@@ -44,6 +44,10 @@ const joinClass = async ({ meetingId, userId, classId, name }) => {
   ];
 
   await Promise.all(batchConditionalPut);
+
+  return {
+    statusCode: 200,
+  };
 };
 
 module.exports = joinClass;

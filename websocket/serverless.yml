@@ -8,8 +8,9 @@ region: ap-southeast-1
 websocketApi:
   component: "@serverless/backend-socket"
   inputs:
-    roleName: ${permissions.name}
+    # roleName: ${permissions.name}
     name: ${service}-${version}-${stage}
+    region: ap-southeast-1
     memory: 128
     timeout: 10
     env:
@@ -86,20 +87,20 @@ database:
             - powerupsBought
           ProjectionType: INCLUDE
 
-permissions:
-  component: "@serverless/aws-iam-role"
-  inputs:
-    name: ${service}-${version}-${stage}
-    service: lambda.amazonaws.com
-    region: ap-southeast-1
-    policy: 
-      - Effect: Allow
-        Action:
-          - "dynamodb:Query"
-          - "dynamodb:GetItem"
-          - "dynamodb:PutItem"
-          - "dynamodb:UpdateItem"
-          - "dynamodb:DeleteItem"
-        Resource:        
-          - arn:aws:dynamodb:${region}:account-id:table/${database.name}
-          - arn:aws:dynamodb:${region}:account-id:table/${database.name}/index/*
+# permissions:
+#   component: "@serverless/aws-iam-role"
+#   inputs:
+#     name: ${service}-${version}-${stage}
+#     service: lambda.amazonaws.com
+#     region: ap-southeast-1
+#     policy: 
+#       - Effect: Allow
+#         Action:
+#           - "dynamodb:Query"
+#           - "dynamodb:GetItem"
+#           - "dynamodb:PutItem"
+#           - "dynamodb:UpdateItem"
+#           - "dynamodb:DeleteItem"
+#         Resource:        
+#           - arn:aws:dynamodb:${region}:account-id:table/${database.name}
+#           - arn:aws:dynamodb:${region}:account-id:table/${database.name}/index/*

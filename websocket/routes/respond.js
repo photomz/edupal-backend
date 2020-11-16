@@ -134,6 +134,10 @@ const respond = async (
     );
 
   await Promise.all(emitPromises);
+
+  return {
+    statusCode: 200,
+  };
 };
 
 module.exports = respond;

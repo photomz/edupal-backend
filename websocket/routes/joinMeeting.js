@@ -13,6 +13,7 @@ const joinMeeting = async (
   { meetingId, role, userId, name },
   { send, id: connectionId }
 ) => {
+  console.log("reached joinMeeting");
   const now = new Date().toISOString();
   const pk = `MEETING#${meetingId}`;
   // No transactwrite because user info may exist if user drops off from call
@@ -33,13 +34,14 @@ const joinMeeting = async (
       .put({
         // Class Meta
         TableName: process.env.db,
-        ExpressionAttributeNames: { "#sk": "META" },
-        ConditionExpression: "attribute_not_exists(#sk)",
+        // ExpressionAttributeNames: { "#sk": "META" },
+        // ConditionExpression: "attribute_not_exists(#sk)",
         Item: {
           pk,
           sk: "META",
           time: { start: now, end: null },
-          classId: null,
+          // Value for GSI keys must be non-empty string, strongly typed
+          classId: "null",
         },
       })
       .promise(),
@@ -47,14 +49,14 @@ const joinMeeting = async (
       .put({
         // User Information
         TableName: process.env.db,
-        ExpressionAttributeNames: {
-          "#sk": `USER#${role}#${meetingId}#${userId}`,
-        },
-        ConditionExpression: "attribute_not_exists(#sk)",
+        // ExpressionAttributeNames: {
+        //   "#sk": `USER#${role}#${meetingId}#${userId}`,
+        // },
+        // ConditionExpression: "attribute_not_exists(#sk)",
         Item: {
           pk,
           sk: `USER#${role}#${meetingId}#${userId}`,
-          classId: null,
+          classId: "null",
           coinTotal: 0,
           name,
           gamification: { correctStreak: 0 },
@@ -63,8 +65,11 @@ const joinMeeting = async (
       .promise(),
   ];
 
+  console.log("reached put definitions");
+
   await Promise.all(batchConditionalPut);
 
+  console.log("reached put responses");
   const getParams = {
     TableName: process.env.db,
     Key: { pk, sk: "META" },
@@ -72,16 +77,20 @@ const joinMeeting = async (
   };
 
   const { classId } = (await docClient.get(getParams).promise()).Item;
-
-  if (classId !== null) {
+  console.log("reached get response");
+  if (classId !== "null") {
     const payload = { action: "getClass", data: { classId } };
     try {
+      console.log("reached socket.send");
       await send(JSON.stringify(payload), connectionId);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log(err);
     }
   }
+  return {
+    statusCode: 200,
+  };
 };
 
 module.exports = joinMeeting;

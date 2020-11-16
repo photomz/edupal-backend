@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const {
   ask,
   disconnect,
@@ -7,8 +8,8 @@ const {
   respond,
   setClass,
 } = require("./routes");
-const { typed } = require("./util");
-const { typeCheck } = require("./util/type-check/lib");
+
+const handler = require("./handler");
 
 const DateType = {
   Date: {
@@ -24,11 +25,9 @@ const RoleType = {
   },
 };
 
-// eslint-disable-next-line no-undef
-on("ask", async (data, socket) => {
-  typed(
-    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String | Null, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, answer: JSONCustom, meta: {optionNum: Int | Null, options: [String|Int] | Null}, askTimestamp: Date, questionId: String",
-    data,
+const schemas = {
+  ask: [
+    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, answer: JSONCustom, meta: {optionNum: Int | Null, options: [String|Int] | Null}, askTimestamp: Date, questionId: String",
     {
       customTypes: {
         ...DateType,
@@ -41,62 +40,58 @@ on("ask", async (data, socket) => {
           typeOf: "String",
           validate: (el) =>
             typeCheck(
-              "String | Number | [String|Number] | null",
+              "String | Number | [String|Number] | Null",
               JSON.parse(el)
             ),
         },
       },
-    }
-  );
-  await ask(data, socket);
-});
-
-// eslint-disable-next-line no-undef
-on("disconnect", async (data, socket) => {
-  typed(
-    "Undefined | {meetingId: String, role: Role, classId: String | Null, userId: String}",
-    data,
-    { customTypes: { ...RoleType } }
-  );
-  await disconnect(data, socket);
-});
-
-// eslint-disable-next-line no-undef
-on("joinClass", async (data, socket) => {
-  typed(
+    },
+  ],
+  joinClass: [
     "{userId: String, classId: String, meetingId: String, name: String}",
-    data
-  );
-  await joinClass(data, socket);
-});
-
-// eslint-disable-next-line no-undef
-on("joinMeeting", async (data, socket) => {
-  typed("{meetingId: String, role: Role, userId: String, name: String}", data, {
-    customTypes: { ...RoleType },
-  });
-  await joinMeeting(data, socket);
-});
-
-// eslint-disable-next-line no-undef
-on("default", async (data, socket) => {
-  typed("undefined", data);
-  await ping(data, socket);
-});
-
-// eslint-disable-next-line no-undef
-on("respond", async (data, socket) => {
-  typed(
-    // Custom date
+  ],
+  joinMeeting: [
+    "{meetingId: String, role: Role, userId: String, name: String}",
+    {
+      customTypes: { ...RoleType },
+    },
+  ],
+  respond: [
     "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: Date",
-    data,
-    { customTypes: DateType }
-  );
-  await respond(data, socket);
-});
+    { customTypes: DateType },
+  ],
+  setClass: ["{classId: String, userId: String, meetingId: String}"],
+  ping: ["*"],
+  disconnect: [
+    "* | {meetingId: String, role: Role, classId: String, userId: String}",
+    { customTypes: { ...RoleType } },
+  ],
+};
 
-// eslint-disable-next-line no-undef
-on("setClass", async (data, socket) => {
-  typed("{classId: String, userId: String, meetingId: String}", data);
-  await setClass(data, socket);
-});
+const redirect = {
+  ask,
+  disconnect,
+  joinClass,
+  joinMeeting,
+  respond,
+  setClass,
+  ping,
+};
+
+on("disconnect", async (..._) =>
+  handler(..._, redirect.disconnect, ...schemas.disconnect)
+);
+on("default", async (..._) => handler(..._, redirect.ping, ...schemas.ping));
+on("ask", async (..._) => handler(..._, redirect.ask, ...schemas.ask));
+on("joinClass", async (..._) =>
+  handler(..._, redirect.joinClass, ...schemas.joinClass)
+);
+on("joinMeeting", async (..._) =>
+  handler(..._, redirect.joinMeeting, ...schemas.joinMeeting)
+);
+on("respond", async (..._) =>
+  handler(..._, redirect.respond, ...schemas.respond)
+);
+on("setClass", async (..._) =>
+  handler(..._, redirect.setClass, ...schemas.setClass)
+);

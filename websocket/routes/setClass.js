@@ -30,7 +30,11 @@ const setClass = async ({ meetingId, userId, classId }, socket) => {
   )[0];
 
   const payload = { action: "getClass", data: { classId } };
-  emitForEach(connections, payload, socket);
+  await emitForEach(connections, payload, socket);
+
+  return {
+    statusCode: 200,
+  };
 };
 
 module.exports = setClass;
