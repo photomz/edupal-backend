@@ -33,9 +33,6 @@ const queryUsers = async (role, meetingId) => {
     })
     .promise();
 
-  console.log("got to queryUser response");
-  console.log(response);
-
   return response.Items;
 };
 

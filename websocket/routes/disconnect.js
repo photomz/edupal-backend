@@ -10,6 +10,7 @@ const disconnect = async (
   { id }
 ) => {
   if (!meetingId) {
+    // eslint-disable-next-line no-console
     console.log(`Connection ${id} has disconnected forcefully`);
     return {
       statusCode: 200,

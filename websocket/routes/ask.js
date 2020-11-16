@@ -91,8 +91,6 @@ const ask = async (
     },
   };
 
-  console.log(connections);
-
   const emitPromises = connections
     .filter((el) => el !== `CONN#STUDENT#${socket.id}`)
     .map(({ sk: el }) =>
