@@ -21,39 +21,48 @@ const queryUsers = async (role, meetingId) => {
       ? "CONN#TEACHER#"
       : "CONN#";
 
-  const response = await docClient.query({
-    TableName: process.env.db,
-    ExpressionAttributeValues: {
-      ":pk": `MEETING#${meetingId}`,
-      ":sk": skStart,
-    },
-    KeyConditionExpression: "pk = :pk and begins_with(sk, :sk)",
-    ProjectionExpression: "sk",
-  });
+  const response = await docClient
+    .query({
+      TableName: process.env.db,
+      ExpressionAttributeValues: {
+        ":pk": `MEETING#${meetingId}`,
+        ":sk": skStart,
+      },
+      KeyConditionExpression: "pk = :pk and begins_with(sk, :sk)",
+      ProjectionExpression: "sk",
+    })
+    .promise();
+
+  console.log("got to queryUser response");
+  console.log(response);
 
   return response.Items;
 };
 
 /**
  * Emit a message for each connection
+ * Filters out sender
  * @param {Array<string>} connections
  * @param {*} payload
  * @param {*} socket
+ * @param {String} exception
  */
-const emitForEach = async (connections, payload, socket) => {
+const emitForEach = async (connections, payload, socket, sender) => {
   const cleanedConnections = connections.map(
     ({ sk }) => sk.split("#")[sk.split("#").length - 1]
   );
-  const emitPromises = cleanedConnections.map((el) =>
-    (async (id) => {
-      try {
-        await socket.send(JSON.stringify(payload), id);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.log("Message could not be sent - CLIENT DISCONNECTED");
-      }
-    })(el)
-  );
+  const emitPromises = cleanedConnections
+    .filter((el) => el !== sender)
+    .map((el) =>
+      (async (id) => {
+        try {
+          await socket.send(JSON.stringify(payload), id);
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.log(`socket.send failed because id ${id} disconnected`);
+        }
+      })(el)
+    );
   await Promise.all(emitPromises);
 };
 

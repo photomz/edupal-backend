@@ -7,8 +7,15 @@ const { docClient } = require("../util");
  */
 const disconnect = async (
   { meetingId, role, userId, name, classId },
-  socket
+  { id }
 ) => {
+  if (!meetingId) {
+    console.log(`Connection ${id} has disconnected forcefully`);
+    return {
+      statusCode: 200,
+      message: "You have forcefully disconnected. This is not recommended.",
+    };
+  }
   const now = new Date().toISOString();
   const params = [
     {
@@ -16,33 +23,33 @@ const disconnect = async (
         TableName: process.env.db,
         Key: {
           pk: `MEETING#${meetingId}`,
-          sk: `CONN#${role.toUpperCase()}#${userId}`,
+          sk: `CONN#${role.toUpperCase()}#${id}`,
         },
       },
     },
-  ];
-  if (role === "teacher")
-    params.push({
+    {
       Update: {
         TableName: process.env.db,
         Key: { pk: `MEETING#${meetingId}`, sk: "META" },
         ExpressionAttributeValues: {
-          ":now": now,
+          ":decr": -1,
         },
-        UpdateExpression: "SET time.end :now",
+        UpdateExpression: "ADD activeConnections :decr",
       },
-    });
+    },
+  ];
 
-  await docClient.transactWrite(params).promise();
+  await docClient.transactWrite({ TransactItems: params }).promise();
 
   // TODO: Stream-like logic to funnel meeting data and update to class
-  // TODO: Actual stream on meeting time end update trigger for attendance
-  console.log(`${userId} ${name} from ${classId} has disconnected`);
+  // TODO: Actual stream on activeConnections 0 trigger (with ReturnValue) for attendance
+  // eslint-disable-next-line no-console
+  console.log(`${userId} ${name} from ${classId} has disconnected gracefully`);
   // TODO: Cut websocket connection
   // TODO: Emit to teachers and student of disconnection
 
   return {
-    message: `You have disconnected at ${now}`,
+    message: `You have disconnected gracefully at ${now}`,
     statusCode: 200,
   };
 };

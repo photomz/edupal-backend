@@ -1,7 +1,7 @@
 const { docClient } = require("../util");
 
 /**
- * User action to join the set class in the meeting by the teacher
+ * Student action to join the set class in the meeting by the teacher
  * Lets Edupal record and persist data after meeting ends for dashboard
  * @param {*} data
  */
@@ -15,8 +15,7 @@ const joinClass = async ({ meetingId, userId, classId, name }) => {
         TableName: process.env.db,
         Key: { pk: `MEETING#${meetingId}`, sk },
         ExpressionAttributeValues: { ":class": classId },
-        ExpressionAttributeNames: { "#sk": sk },
-        ConditionExpression: "attribute_exists(#sk)",
+        ConditionExpression: "attribute_exists(sk)",
         UpdateExpression: "SET classId = :class",
       })
       .promise(),
@@ -24,10 +23,7 @@ const joinClass = async ({ meetingId, userId, classId, name }) => {
       .put({
         // Create Class PK if new user
         TableName: process.env.db,
-        ExpressionAttributeNames: {
-          "#sk": `USER#STUDENT#${userId}`,
-        },
-        ConditionExpression: "attribute_not_exists(#sk)",
+        ConditionExpression: "attribute_not_exists(sk)",
         Item: {
           pk: `CLASS#${classId}`,
           sk: `USER#STUDENT#${userId}`,
@@ -43,7 +39,17 @@ const joinClass = async ({ meetingId, userId, classId, name }) => {
       .promise(),
   ];
 
-  await Promise.all(batchConditionalPut);
+  try {
+    await Promise.all(batchConditionalPut);
+  } catch (error) {
+    // Conditional request failure is expected behaviour when not new user
+    if (error.message !== "The conditional request failed")
+      return {
+        statusCode: 404,
+        reason: "Error at batchConditionalPut",
+        error,
+      };
+  }
 
   return {
     statusCode: 200,

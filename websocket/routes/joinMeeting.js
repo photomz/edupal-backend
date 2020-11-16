@@ -2,29 +2,46 @@ const { docClient } = require("../util");
 
 /**
  * Automatically triggered upon entering Google Meet meeting
- * Adds ConnectionID to table and create temporary leaderboard
+ * Adds socket.id to table and create temporary leaderboard
  * Subscribes user to messages in meeting
  * Inits meeting META if first meeting joiner
  * Emits getClass if classId not null
  * @param {*} data
  * @param {*} socket
  */
-const joinMeeting = async (
-  { meetingId, role, userId, name },
-  { send, id: connectionId }
-) => {
-  console.log("reached joinMeeting");
+const joinMeeting = async ({ meetingId, role, userId, name }, socket) => {
   const now = new Date().toISOString();
   const pk = `MEETING#${meetingId}`;
   // No transactwrite because user info may exist if user drops off from call
+  let UserItem = {
+    pk,
+    sk: `USER#${role}#${meetingId}#${userId}`,
+    classId: "null",
+    name,
+  };
+  if (role === "STUDENT")
+    UserItem = {
+      ...UserItem,
+      coinTotal: 0,
+      gamification: { correctStreak: 0 },
+    };
+
   const batchConditionalPut = [
+    docClient
+      .put({
+        // User Information
+        TableName: process.env.db,
+        ConditionExpression: "attribute_not_exists(sk)",
+        Item: UserItem,
+      })
+      .promise(),
     docClient
       .put({
         // Connection
         TableName: process.env.db,
         Item: {
           pk,
-          sk: `CONN#${role}#${connectionId}`,
+          sk: `CONN#${role}#${socket.id}`,
           user: { id: userId, name },
           connectedAt: now,
         },
@@ -32,60 +49,61 @@ const joinMeeting = async (
       .promise(),
     docClient
       .put({
-        // Class Meta
+        // Class META init setup
         TableName: process.env.db,
-        // ExpressionAttributeNames: { "#sk": "META" },
-        // ConditionExpression: "attribute_not_exists(#sk)",
+        ConditionExpression: "attribute_not_exists(sk)",
         Item: {
           pk,
           sk: "META",
           time: { start: now, end: null },
           // Value for GSI keys must be non-empty string, strongly typed
           classId: "null",
-        },
-      })
-      .promise(),
-    docClient
-      .put({
-        // User Information
-        TableName: process.env.db,
-        // ExpressionAttributeNames: {
-        //   "#sk": `USER#${role}#${meetingId}#${userId}`,
-        // },
-        // ConditionExpression: "attribute_not_exists(#sk)",
-        Item: {
-          pk,
-          sk: `USER#${role}#${meetingId}#${userId}`,
-          classId: "null",
-          coinTotal: 0,
-          name,
-          gamification: { correctStreak: 0 },
+          activeConnections: 1,
         },
       })
       .promise(),
   ];
 
-  console.log("reached put definitions");
+  try {
+    await Promise.all(batchConditionalPut);
+  } catch (error) {
+    // Conditional request expected to fail when not init
+    if (error.message !== "The conditional request failed")
+      return {
+        statusCode: 404,
+        reason: "Error at batchConditionalPut",
+        error,
+      };
+  }
 
-  await Promise.all(batchConditionalPut);
-
-  console.log("reached put responses");
   const getParams = {
     TableName: process.env.db,
     Key: { pk, sk: "META" },
     ProjectionExpression: "classId",
   };
 
-  const { classId } = (await docClient.get(getParams).promise()).Item;
-  console.log("reached get response");
+  let classId;
+
+  try {
+    classId = (await docClient.get(getParams).promise()).Item.classId;
+  } catch (error) {
+    return {
+      statusCode: 404,
+      reason: "Error at get ClassId",
+      error,
+    };
+  }
+
   if (classId !== "null") {
     const payload = { action: "getClass", data: { classId } };
     try {
-      console.log("reached socket.send");
-      await send(JSON.stringify(payload), connectionId);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.log(err);
+      await socket.send(JSON.stringify(payload), socket.id);
+    } catch (error) {
+      return {
+        statusCode: 404,
+        reason: "Error at socket.send, client disconnected",
+        error,
+      };
     }
   }
   return {

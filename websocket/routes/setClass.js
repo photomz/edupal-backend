@@ -30,7 +30,7 @@ const setClass = async ({ meetingId, userId, classId }, socket) => {
   )[0];
 
   const payload = { action: "getClass", data: { classId } };
-  await emitForEach(connections, payload, socket);
+  await emitForEach(connections, payload, socket, socket.id);
 
   return {
     statusCode: 200,

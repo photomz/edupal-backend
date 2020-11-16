@@ -10,6 +10,7 @@ const {
 } = require("./routes");
 
 const handler = require("./handler");
+const { typeCheck } = require("./util/type-check");
 
 const DateType = {
   Date: {
@@ -27,7 +28,7 @@ const RoleType = {
 
 const schemas = {
   ask: [
-    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, answer: JSONCustom, meta: {optionNum: Int | Null, options: [String|Int] | Null}, askTimestamp: Date, questionId: String",
+    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, answer: JSONCustom, meta: {optionNum: Number | Null, options: [String|Number] | Null}, askTimestamp: Date, questionId: String}",
     {
       customTypes: {
         ...DateType,
@@ -57,7 +58,7 @@ const schemas = {
     },
   ],
   respond: [
-    "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: Date",
+    "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: Date}",
     { customTypes: DateType },
   ],
   setClass: ["{classId: String, userId: String, meetingId: String}"],

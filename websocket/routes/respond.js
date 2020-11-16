@@ -1,5 +1,7 @@
-const { AES } = require("../util/cryptojs/cryptojs");
-const { typeCheck } = require("../util");
+const {
+  Crypto: { AES },
+} = require("../util/cryptojs/cryptojs");
+const { typeCheck } = require("../util/type-check/lib");
 const { docClient, queryUsers } = require("../util");
 
 /**
@@ -21,11 +23,18 @@ const respond = async (
     respondTimestamp,
     avatar,
   },
-  { connectionId, ...socket }
+  socket
 ) => {
-  const answer = JSON.parse(
-    AES.decrypt(answerCrypt, process.env.CRYPTO_SECRET)
-  );
+  let answer;
+  try {
+    answer = AES.decrypt(answerCrypt, process.env.CRYPTO_SECRET);
+  } catch (error) {
+    return {
+      statusCode: 404,
+      reason: "DecryptionError",
+      error,
+    };
+  }
   let isCorrect;
   if (typeCheck("String", answer))
     isCorrect = answer.trim().toLowerCase() === response.trim().toLowerCase();
@@ -36,16 +45,13 @@ const respond = async (
     isCorrect = answer.includes(Number.parseFloat(response));
   else if (typeCheck(null, answer)) isCorrect = null;
 
-  const coinsEarned = !!isCorrect; // Simplified binary points system, make complex later
+  const coinsEarned = Number(isCorrect); // Simplified binary points system, make complex later
 
   const pk = `MEETING#${meetingId}`;
   const PutParams = (sk) => ({
     Put: {
       TableName: process.env.db,
-      ExpressionAtrributeNames: {
-        "#sk": sk,
-      },
-      ConditionExpression: "attribute_not_exists(#sk)",
+      ConditionExpression: "attribute_not_exists(sk)",
       Item: {
         pk,
         sk,
@@ -61,6 +67,8 @@ const respond = async (
     },
   });
 
+  // If isCorrect is null then is ungraded, should not reset streak
+  const switcher = isCorrect === false;
   const transactPromise = docClient
     .transactWrite({
       TransactItems: [
@@ -70,28 +78,37 @@ const respond = async (
         {
           Update: {
             TableName: process.env.db,
-            Key: { pk, sk: `USER#STUDENT#${id}` },
-            ExpressionAttributeNames: { "#sk": `USER#STUDENT#${id}` },
+            Key: { pk, sk: `USER#STUDENT#${meetingId}#${id}` },
             ExpressionAttributeValues: {
               ":coin": coinsEarned,
-              ":streak": isCorrect,
+              [switcher ? ":z" : ":inc"]: switcher ? 0 : Number(isCorrect),
             },
-            // If isCorrect is null then is ungraded, should not reset streak
             UpdateExpression: "ADD coinTotal :coin".concat(
-              isCorrect === false
-                ? " SET gamification.currentStreak 0"
-                : ", gamification.currentStreak :streak"
+              switcher
+                ? "  SET gamification.currentStreak :z"
+                : ", gamification.currentStreak :inc"
             ),
-            ConditionExpression: "attribute_exists(#sk)",
+            ConditionExpression: "attribute_exists(sk)",
           },
         },
       ],
     })
     .promise();
 
-  const connections = (
-    await Promise.all([queryUsers(null, meetingId), transactPromise])
-  )[0];
+  let connections;
+  try {
+    [connections] = await Promise.all([
+      queryUsers(null, meetingId),
+      transactPromise,
+    ]);
+  } catch (error) {
+    return {
+      statusCode: 404,
+      reason:
+        "Error in DynamoDb for put response, update meeting user, and query all connected users",
+      error,
+    };
+  }
 
   const teacherPayload = {
     action: "recieveResponse",
@@ -118,17 +135,19 @@ const respond = async (
   };
 
   const emitPromises = connections
-    .filter((el) => el !== `CONN#STUDENT#${connectionId}`)
-    .map((el) =>
+    .filter((el) => el !== `CONN#STUDENT#${id}`)
+    .map(({ sk: el }) =>
       (async (role, userId) => {
         try {
           await socket.send(
-            role === "TEACHER" ? teacherPayload : studentPayload,
+            JSON.stringify(
+              role === "TEACHER" ? teacherPayload : studentPayload
+            ),
             userId
           );
         } catch (error) {
           // eslint-disable-next-line no-console
-          console.log("Message could not be sent - CLIENT DISCONNECTED");
+          console.log(`socket.send failed because id ${userId} disconnected`);
         }
       })(el.split("#")[1], el.split("#")[2])
     );
