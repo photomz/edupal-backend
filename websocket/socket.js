@@ -35,7 +35,7 @@ const schemas = {
         Enum: {
           typeOf: "String",
           validate: (el) =>
-            ["True/False", "MCQ", "Option", "Short Answer"].includes(el),
+            ["TrueFalse", "MCQ", "MultiSelect", "ShortAnswer"].includes(el),
         },
         JSONCustom: {
           typeOf: "String",
