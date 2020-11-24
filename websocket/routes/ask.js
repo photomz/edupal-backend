@@ -25,7 +25,10 @@ const ask = async (
 ) => {
   let answerCrypt;
   try {
-    answerCrypt = AES.encrypt(answer, process.env.CRYPTO_SECRET);
+    answerCrypt = AES.encrypt(
+      JSON.stringify(answer),
+      process.env.CRYPTO_SECRET
+    );
   } catch (error) {
     return {
       statusCode: 404,

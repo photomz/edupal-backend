@@ -35,6 +35,13 @@ const respond = async (
       error,
     };
   }
+
+  try {
+    answer = JSON.parse(answer);
+  } catch {
+    // Parsing raw string answer will throw error
+  }
+
   let isCorrect;
   if (typeCheck("String", answer))
     isCorrect = answer.trim().toLowerCase() === response.trim().toLowerCase();
@@ -72,9 +79,6 @@ const respond = async (
   const transactPromise = docClient
     .transactWrite({
       TransactItems: [
-        PutParams(`RES#${id}#${askTimestamp}#${questionId}`),
-        PutParams(`RES#${askTimestamp}#${questionId}#${id}`),
-        PutParams(`RES#${questionId}#${askTimestamp}#${id}`),
         {
           Update: {
             TableName: process.env.db,
@@ -85,19 +89,24 @@ const respond = async (
             },
             UpdateExpression: "ADD coinTotal :coin".concat(
               switcher
-                ? "  SET gamification.currentStreak :z"
+                ? "  SET gamification.currentStreak = :z"
                 : ", gamification.currentStreak :inc"
             ),
             ConditionExpression: "attribute_exists(sk)",
+            ReturnValues: "ALL_NEW",
           },
         },
+        PutParams(`RES#${id}#${askTimestamp}#${questionId}`),
+        PutParams(`RES#${askTimestamp}#${questionId}#${id}`),
+        PutParams(`RES#${questionId}#${askTimestamp}#${id}`),
       ],
     })
     .promise();
 
   let connections;
+  let transactResponse;
   try {
-    [connections] = await Promise.all([
+    [connections, transactResponse] = await Promise.all([
       queryUsers(null, meetingId),
       transactPromise,
     ]);
@@ -150,7 +159,6 @@ const respond = async (
         let payload;
         if (role === "TEACHER") payload = teacherPayload;
         else if (userId !== id) payload = studentPayload;
-        else if (answer !== null) payload = responderPayload;
         await socket.send(JSON.stringify(payload), userId);
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -158,6 +166,8 @@ const respond = async (
       }
     })(el.split("#")[1], el.split("#")[2])
   );
+
+  await socket.send(JSON.stringify(responderPayload), socket.id);
 
   await Promise.all(emitPromises);
 
