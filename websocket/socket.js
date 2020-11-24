@@ -63,7 +63,7 @@ const schemas = {
     },
   ],
   respond: [
-    "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: JSONable}",
+    "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: JSONable, askTimestamp: Date, respondTimestamp: Date}",
     { customTypes: DateType },
   ],
   setClass: ["{classId: String, userId: String, meetingId: String}"],
