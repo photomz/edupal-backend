@@ -134,23 +134,30 @@ const respond = async (
     },
   };
 
-  const emitPromises = connections
-    .filter((el) => el !== `CONN#STUDENT#${id}`)
-    .map(({ sk: el }) =>
-      (async (role, userId) => {
-        try {
-          await socket.send(
-            JSON.stringify(
-              role === "TEACHER" ? teacherPayload : studentPayload
-            ),
-            userId
-          );
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.log(`socket.send failed because id ${userId} disconnected`);
-        }
-      })(el.split("#")[1], el.split("#")[2])
-    );
+  const responderPayload = {
+    action: "receiveAnswer",
+    data: {
+      questionId,
+      isCorrect,
+      coinsEarned,
+      answer,
+    },
+  };
+
+  const emitPromises = connections.map(({ sk: el }) =>
+    (async (role, userId) => {
+      try {
+        let payload;
+        if (role === "TEACHER") payload = teacherPayload;
+        else if (userId !== id) payload = studentPayload;
+        else if (answer !== null) payload = responderPayload;
+        await socket.send(JSON.stringify(payload), userId);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log(`socket.send failed because id ${userId} disconnected`);
+      }
+    })(el.split("#")[1], el.split("#")[2])
+  );
 
   await Promise.all(emitPromises);
 

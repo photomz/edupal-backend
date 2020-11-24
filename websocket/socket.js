@@ -27,6 +27,7 @@ const RoleType = {
 };
 
 const schemas = {
+  /// TODO: Encode answer index from options, don't compare text itself
   ask: [
     "{teacher: {name: String, id: String}, avatar: String | Null, classId: String, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, answer: JSONCustom, meta: {optionNum: Number | Null, options: [String|Number] | Null}, askTimestamp: Date, questionId: String}",
     {
