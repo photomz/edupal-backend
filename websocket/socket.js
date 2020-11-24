@@ -26,25 +26,29 @@ const RoleType = {
   },
 };
 
+const JSONableType = {
+  JSONable: {
+    typeOf: "String",
+    validate: (el) =>
+      typeCheck(
+        "String | Number | Boolean | [String|Number|Boolean] | Null",
+        JSON.parse(el)
+      ),
+  },
+};
+
 const schemas = {
   /// TODO: Encode answer index from options, don't compare text itself
   ask: [
-    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String, meetingId: String, question: {type: Enum, image: String | Null, text: String | Null}, answer: JSONCustom, meta: {optionNum: Number | Null, options: [String|Number] | Null}, askTimestamp: Date, questionId: String}",
+    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String, meetingId: String, question: {type: QuestionType, image: String | Null, text: String | Null}, answer: JSONable, meta: {optionNum: Number | Null, options: [String|Number] | Null}, askTimestamp: Date, questionId: String}",
     {
       customTypes: {
         ...DateType,
-        Enum: {
+        ...JSONableType,
+        QuestionType: {
           typeOf: "String",
           validate: (el) =>
             ["TrueFalse", "MCQ", "MultiSelect", "ShortAnswer"].includes(el),
-        },
-        JSONCustom: {
-          typeOf: "String",
-          validate: (el) =>
-            typeCheck(
-              "String | Number | [String|Number] | Null",
-              JSON.parse(el)
-            ),
         },
       },
     },
@@ -59,7 +63,7 @@ const schemas = {
     },
   ],
   respond: [
-    "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: Date}",
+    "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: JSONable}",
     { customTypes: DateType },
   ],
   setClass: ["{classId: String, userId: String, meetingId: String}"],
