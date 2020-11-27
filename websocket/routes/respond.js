@@ -104,9 +104,8 @@ const respond = async (
     .promise();
 
   let connections;
-  let transactResponse;
   try {
-    [connections, transactResponse] = await Promise.all([
+    [connections] = await Promise.all([
       queryUsers(null, meetingId),
       transactPromise,
     ]);
@@ -120,7 +119,7 @@ const respond = async (
   }
 
   const teacherPayload = {
-    action: "recieveResponse",
+    action: "receiveResponse",
     data: {
       questionId,
       response,
