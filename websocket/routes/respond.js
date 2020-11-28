@@ -86,8 +86,9 @@ const respond = async (
             ExpressionAttributeValues: {
               ":coin": coinsEarned,
               [switcher ? ":z" : ":inc"]: switcher ? 0 : Number(isCorrect),
+              ":change": coinsEarned
             },
-            UpdateExpression: "ADD coinTotal :coin".concat(
+            UpdateExpression: "ADD coinTotal :coin, coinChange :change".concat(
               switcher
                 ? "  SET gamification.currentStreak = :z"
                 : ", gamification.currentStreak :inc"

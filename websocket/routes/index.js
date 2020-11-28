@@ -6,4 +6,5 @@ module.exports = {
   ping: require("./ping"),
   respond: require("./respond"),
   setClass: require("./setClass"),
+  getLeaderboard: require("./getLeaderboard"),
 };

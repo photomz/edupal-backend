@@ -9,7 +9,10 @@ const { docClient } = require("../util");
  * @param {*} data
  * @param {*} socket
  */
-const joinMeeting = async ({ meetingId, role, userId, name }, socket) => {
+const joinMeeting = async (
+  { meetingId, role, userId, name, avatar },
+  socket
+) => {
   const now = new Date().toISOString();
   const pk = `MEETING#${meetingId}`;
   // No transactwrite because user info may exist if user drops off from call
@@ -18,12 +21,14 @@ const joinMeeting = async ({ meetingId, role, userId, name }, socket) => {
     sk: `USER#${role}#${meetingId}#${userId}`,
     classId: "null",
     name,
+    avatar,
   };
   if (role === "STUDENT")
     UserItem = {
       ...UserItem,
       coinTotal: 0,
       gamification: { correctStreak: 0 },
+      coinChange: 0,
     };
 
   const batchConditionalPut = [
