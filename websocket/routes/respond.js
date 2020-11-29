@@ -87,11 +87,13 @@ const respond = async (
               [switcher ? ":z" : ":inc"]: switcher ? 0 : Number(isCorrect),
               ":change": coinsEarned,
             },
-            UpdateExpression: "ADD coinTotal :coin, coinChange :change".concat(
-              switcher
-                ? "  SET gamification.currentStreak = :z"
-                : ", gamification.currentStreak :inc"
-            ),
+            UpdateExpression: "ADD coinTotal :coin"
+              .concat(
+                switcher
+                  ? "  SET gamification.currentStreak = :z, "
+                  : ", gamification.currentStreak :inc  SET"
+              )
+              .concat("coinChange = :change"),
             ConditionExpression: "attribute_exists(sk)",
             ReturnValues: "ALL_NEW",
           },
