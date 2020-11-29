@@ -1,7 +1,7 @@
 service: edupal-backend
 app: edupal
 org: photonmz
-version: v0.1
+version: v0.2
 stage: dev
 region: ap-southeast-1
 
@@ -71,6 +71,8 @@ database:
             - classId
             - name
             - gamification
+            - coinChange
+            - avatar
           ProjectionType: INCLUDE
       - IndexName: ReverseIndex
         KeySchema:

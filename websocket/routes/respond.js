@@ -35,12 +35,15 @@ const respond = async (
       error,
     };
   }
-
+  console.log(typeof answer, answer);
   try {
     answer = JSON.parse(answer);
   } catch {
     // Parsing raw string answer will throw error
+    console.log("JSON parsing failed");
   }
+
+  console.log(typeof answer, answer);
 
   let isCorrect;
   if (typeCheck("String", answer))
@@ -50,7 +53,7 @@ const respond = async (
   else if (typeCheck("[String]", answer)) isCorrect = answer.includes(response);
   else if (typeCheck("[Number]", answer))
     isCorrect = answer.includes(Number.parseFloat(response));
-  else if (typeCheck(null, answer)) isCorrect = null;
+  else if (typeCheck("Null", answer)) isCorrect = null;
 
   const coinsEarned = Number(isCorrect); // Simplified binary points system, make complex later
 
@@ -86,7 +89,7 @@ const respond = async (
             ExpressionAttributeValues: {
               ":coin": coinsEarned,
               [switcher ? ":z" : ":inc"]: switcher ? 0 : Number(isCorrect),
-              ":change": coinsEarned
+              ":change": coinsEarned,
             },
             UpdateExpression: "ADD coinTotal :coin, coinChange :change".concat(
               switcher

@@ -12,10 +12,14 @@ const getLeaderboard = async ({ meetingId }, socket) => {
     ExpressionAttributeValues: {
       ":pk": `MEETING#${meetingId}`,
     },
+    ExpressionAttributeNames: {
+      "#name": "name",
+    },
     KeyConditionExpression: "pk = :pk",
     ScanIndexForward: false,
 
-    ProjectionExpression: "name sk avatar coinTotal gamification coinChange",
+    ProjectionExpression:
+      "#name, sk, avatar, coinTotal, gamification, coinChange",
   };
 
   let queryResponse;
@@ -30,11 +34,11 @@ const getLeaderboard = async ({ meetingId }, socket) => {
   }
 
   const data = queryResponse.map(
-    (sk, gamification, coinChange, name, avatar, points) => ({
+    ({ sk, gamification, coinChange, name, avatar, coinTotal }) => ({
       name,
-      id: sk.split("#").slice(sk.split("#").length - 1),
+      id: sk.split("#")[sk.split("#").length - 1],
       avatar,
-      points,
+      points: coinTotal,
       streak: gamification.correctStreak,
       change: coinChange,
     })
