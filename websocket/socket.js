@@ -64,13 +64,13 @@ const schemas = {
     },
   ],
   respond: [
-    "{student: {name : String, id: String}, answerCrypt: String, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String, askTimestamp: Date, respondTimestamp: Date}",
+    "{student: {name: String, id: String}, answerCrypt: String | Undefined, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String | Null | Number | [Boolean] | Boolean, askTimestamp: Date, respondTimestamp: Date}",
     { customTypes: DateType },
   ],
   setClass: ["{classId: String, userId: String, meetingId: String}"],
   ping: ["*"],
   disconnect: [
-    "* | {meetingId: String, role: Role, classId: String, userId: String}",
+    "Undefined | {meetingId: String, role: Role, classId: String, userId: String}",
     { customTypes: { ...RoleType } },
   ],
   getLeaderboard: ["{meetingId: String}"],

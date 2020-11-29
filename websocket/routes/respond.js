@@ -26,30 +26,42 @@ const respond = async (
   socket
 ) => {
   let answer;
-  try {
-    answer = AES.decrypt(answerCrypt, process.env.CRYPTO_SECRET);
-  } catch (error) {
-    return {
-      statusCode: 404,
-      reason: "DecryptionError",
-      error,
-    };
-  }
-  try {
-    answer = JSON.parse(answer);
-  } catch {
-    // Parsing raw string answer will throw error
+  // Random behaviour of Crypto lib where null is encoded as undefined
+  if (answerCrypt === undefined) answer = null;
+  else {
+    try {
+      answer = AES.decrypt(answerCrypt, process.env.CRYPTO_SECRET);
+    } catch (error) {
+      return {
+        statusCode: 404,
+        reason: "DecryptionError",
+        error,
+      };
+    }
+    try {
+      answer = JSON.parse(answer);
+    } catch {
+      // Parsing raw string answer will throw error
+    }
   }
 
   let isCorrect;
   if (typeCheck("String", answer))
     isCorrect = answer.trim().toLowerCase() === response.trim().toLowerCase();
-  else if (typeCheck("Number", answer))
-    isCorrect = answer === Number.parseFloat(response);
-  else if (typeCheck("[String]", answer)) isCorrect = answer.includes(response);
-  else if (typeCheck("[Number]", answer))
-    isCorrect = answer.includes(Number.parseFloat(response));
+  else if (typeCheck("Number | Boolean", answer))
+    isCorrect = answer === response;
+  // else if (typeCheck("[String]", answer)) isCorrect = answer.includes(response);
+  // else if (typeCheck("[Number]", answer))
+  //   isCorrect = answer.includes(Number.parseFloat(response));
   else if (typeCheck("Null", answer)) isCorrect = null;
+  else if (typeCheck("[Boolean]", answer))
+    isCorrect = response.every((el, i) => el === answer[i]);
+  else
+    return {
+      statusCode: 404,
+      reason: "AnswerValidationError",
+      error: `Unexpected answer type ${typeof answer}`,
+    };
 
   const coinsEarned = Number(isCorrect); // Simplified binary points system, make complex later
 
@@ -91,7 +103,7 @@ const respond = async (
               .concat(
                 switcher
                   ? "  SET gamification.currentStreak = :z, "
-                  : ", gamification.currentStreak :inc  SET"
+                  : ", gamification.currentStreak :inc  SET "
               )
               .concat("coinChange = :change"),
             ConditionExpression: "attribute_exists(sk)",
