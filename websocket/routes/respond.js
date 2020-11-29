@@ -35,15 +35,11 @@ const respond = async (
       error,
     };
   }
-  console.log(typeof answer, answer);
   try {
     answer = JSON.parse(answer);
   } catch {
     // Parsing raw string answer will throw error
-    console.log("JSON parsing failed");
   }
-
-  console.log(typeof answer, answer);
 
   let isCorrect;
   if (typeCheck("String", answer))
