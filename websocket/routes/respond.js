@@ -166,6 +166,8 @@ const respond = async (
     },
   };
 
+  const disconnectedIds = [];
+
   const emitPromises = connections.map(({ sk: el }) =>
     (async (role, userId) => {
       try {
@@ -173,12 +175,15 @@ const respond = async (
         if (role === "TEACHER") payload = teacherPayload;
         else if (userId !== id) payload = studentPayload;
         await socket.send(JSON.stringify(payload), userId);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.log(`socket.send failed because id ${userId} disconnected`);
+      } catch {
+        disconnectedIds.push(userId);
       }
     })(el.split("#")[1], el.split("#")[2])
   );
+
+  if (disconnectedIds.length)
+    // eslint-disable-next-line no-console
+    console.info(`socket.sends failed for ${disconnectedIds}`);
 
   await socket.send(JSON.stringify(responderPayload), socket.id);
 

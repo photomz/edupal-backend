@@ -1,7 +1,8 @@
-const { docClient } = require("../util");
+const { docClient, doesTeacherExist } = require("../util");
 
 /**
  * Automatically triggered upon entering Google Meet meeting
+ * Rejects if role is teacher and teacher already exists
  * Adds socket.id to table and create temporary leaderboard
  * Subscribes user to messages in meeting
  * Inits meeting META if first meeting joiner
@@ -13,6 +14,25 @@ const joinMeeting = async (
   { meetingId, role, userId, name, avatar },
   socket
 ) => {
+  if (role === "TEACHER") {
+    const teacherQuery = await doesTeacherExist(meetingId);
+
+    if (teacherQuery.length) {
+      const payload = {
+        action: "joinMeetingFailed",
+        data: {
+          message: `You can not join as teacher because ${teacherQuery[0].name} is currently the teacher. Ask ${teacherQuery[0].name} to give up their role as teacher or join as student and try again.`,
+        },
+      };
+      try {
+        await socket.send(JSON.stringify(payload), socket.id);
+      } catch {
+        // About to return error anyways
+      }
+      return { statusCode: 404 };
+    }
+  }
+
   const now = new Date().toISOString();
   const pk = `MEETING#${meetingId}`;
   // No transactwrite because user info may exist if user drops off from call

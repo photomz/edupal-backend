@@ -94,6 +94,8 @@ const ask = async (
     },
   };
 
+  const disconnectedIds = [];
+
   const emitPromises = connections
     .filter((el) => el !== `CONN#STUDENT#${socket.id}`)
     .map(({ sk: el }) =>
@@ -106,11 +108,14 @@ const ask = async (
             userId
           );
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.log(`socket.send failed because id ${userId} disconnected`);
+          disconnectedIds.push(userId);
         }
       })(el.split("#")[1], el.split("#")[2])
     );
+
+  if (disconnectedIds.length)
+    // eslint-disable-next-line no-console
+    console.info(`socket.sends failed for ${disconnectedIds}`);
 
   try {
     await Promise.all(emitPromises);

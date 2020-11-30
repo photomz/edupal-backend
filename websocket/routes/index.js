@@ -7,4 +7,5 @@ module.exports = {
   respond: require("./respond"),
   setClass: require("./setClass"),
   getLeaderboard: require("./getLeaderboard"),
+  updateRole: require("./updateRole"),
 };

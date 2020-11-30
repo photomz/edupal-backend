@@ -8,6 +8,7 @@ const {
   respond,
   setClass,
   getLeaderboard,
+  updateRole,
 } = require("./routes");
 
 const handler = require("./handler");
@@ -60,7 +61,7 @@ const schemas = {
   joinMeeting: [
     "{meetingId: String, role: Role, userId: String, name: String, avatar: String}",
     {
-      customTypes: { ...RoleType },
+      customTypes: RoleType,
     },
   ],
   respond: [
@@ -71,9 +72,13 @@ const schemas = {
   ping: ["*"],
   disconnect: [
     "Undefined | {meetingId: String, role: Role, classId: String, userId: String}",
-    { customTypes: { ...RoleType } },
+    { customTypes: RoleType },
   ],
   getLeaderboard: ["{meetingId: String}"],
+  updateRole: [
+    "{prevRole: Role, newRole: Role, meetingId: String, userId: String, name :String, avatar: String}",
+    { customTypes: RoleType },
+  ],
 };
 
 const redirect = {
@@ -85,6 +90,7 @@ const redirect = {
   setClass,
   ping,
   getLeaderboard,
+  updateRole,
 };
 
 // TODO: Add route for changing roles, checking for teacher surrender role
@@ -107,4 +113,7 @@ on("setClass", async (..._) =>
 );
 on("getLeaderboard", async (..._) =>
   handler(..._, redirect.getLeaderboard, ...schemas.getLeaderboard)
+);
+on("updateRole", async (..._) =>
+  handler(..._, redirect.updateRole, ...schemas.updateRole)
 );
