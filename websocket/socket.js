@@ -40,9 +40,22 @@ const JSONableType = {
 };
 
 const schemas = {
-  /// TODO: Encode answer index from options, don't compare text itself
   ask: [
-    "{teacher: {name: String, id: String}, avatar: String | Null, classId: String, meetingId: String, question: {type: QuestionType, image: String | Null, text: String | Null}, answer: String | Null | Number | [Boolean] | Boolean, meta: {optionNum: Number | Null, options: [String|Number] | Null}, askTimestamp: Date, questionId: String}",
+    `{
+      teacher: {name: String, id: String}, 
+      avatar: String | Null, 
+      classId: String, 
+      meetingId: String, 
+      question: {
+        type: QuestionType,
+        image: String | Null, 
+        text: String | Null
+      }, 
+      answer: String | Null | Number | [Boolean] | Boolean, 
+      meta: {optionNum: Number | Undefined, options: [String|Number] | Undefined}, 
+      askTimestamp: Date, 
+      questionId: String
+    }`,
     {
       customTypes: {
         ...DateType,

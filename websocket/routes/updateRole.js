@@ -51,7 +51,6 @@ const updateRole = async (
     {
       Delete: {
         TableName: process.env.db,
-        ConditionExpression: "attribute_exists(sk)",
         Key: {
           pk,
           sk: `CONN#${prevRole}#${socket.id}`,
@@ -61,7 +60,6 @@ const updateRole = async (
     {
       Delete: {
         TableName: process.env.db,
-        ConditionExpression: "attribute_exists(sk)",
         Key: {
           pk,
           sk: `USER#${prevRole}#${meetingId}#${userId}`,
