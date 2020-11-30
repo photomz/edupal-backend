@@ -21,7 +21,7 @@ const joinMeeting = async (
       const payload = {
         action: "joinMeetingFailed",
         data: {
-          message: `You can not join as teacher because ${teacherQuery[0].name} is currently the teacher. Ask ${teacherQuery[0].name} to give up their role as teacher or join as student and try again.`,
+          culprit: teacherQuery[0].name,
         },
       };
       try {

@@ -18,7 +18,7 @@ const updateRole = async (
         action: "updateRoleFailed",
         data: {
           prevRole,
-          message: `You can not become teacher because one already exists! Ask ${teacherQuery[0].name} to give up their role as teacher first before you try again.`,
+          culprit: teacherQuery[0].name,
         },
       };
       try {
@@ -101,7 +101,6 @@ const updateRole = async (
     action: "updateRoleSuccess",
     data: {
       newRole,
-      message: `Success! You are now a ${newRole.toLowerCase()}.`,
     },
   };
   try {
