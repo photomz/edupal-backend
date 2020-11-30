@@ -100,7 +100,6 @@ const updateRole = async (
   const payload = {
     action: "updateRoleSuccess",
     data: {
-      prevRole,
       message: `Success! You are now a ${newRole.toLowerCase()}.`,
     },
   };

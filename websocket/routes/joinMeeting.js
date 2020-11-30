@@ -119,18 +119,24 @@ const joinMeeting = async (
     };
   }
 
+  try {
+    await socket.send(
+      JSON.stringify({ action: "joinMeetingSuccess" }),
+      socket.id
+    );
+  } catch (error) {
+    return { statusCode: 404 };
+  }
+
   if (classId !== "null") {
     const payload = { action: "getClass", data: { classId } };
     try {
       await socket.send(JSON.stringify(payload), socket.id);
     } catch (error) {
-      return {
-        statusCode: 404,
-        reason: "Error at socket.send, client disconnected",
-        error,
-      };
+      return { statusCode: 404 };
     }
   }
+
   return {
     statusCode: 200,
   };
