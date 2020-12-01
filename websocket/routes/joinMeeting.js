@@ -14,24 +14,19 @@ const joinMeeting = async (
   { meetingId, role, userId, name, avatar },
   socket
 ) => {
+  let res = {};
   if (role === "TEACHER") {
     const teacherQuery = await doesTeacherExist(meetingId);
-        const skArr = teacherQuery[0].sk.split("#");
-        const teacherId = skArr[skArr.length - 1];
+    const skArr = teacherQuery[0].sk.split("#");
+    const teacherId = skArr[skArr.length - 1];
 
     if (teacherQuery.length && teacherId !== userId) {
-      const payload = {
-        action: "joinMeetingFailed",
-        data: {
-          culprit: teacherQuery[0].name,
-        },
+      // Auto change to student if cannot join as teacher
+      // eslint-disable-next-line no-param-reassign
+      role = "STUDENT";
+      res = {
+        action: "joinMeetingAsStudent",
       };
-      try {
-        await socket.send(JSON.stringify(payload), socket.id);
-      } catch {
-        // About to return error anyways
-      }
-      return { statusCode: 404 };
     }
   }
 
@@ -141,6 +136,7 @@ const joinMeeting = async (
 
   return {
     statusCode: 200,
+    ...res,
   };
 };
 
