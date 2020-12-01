@@ -6,7 +6,7 @@ stage: dev
 region: ap-southeast-1
 
 websocketApi:
-  component: "@serverless/backend-socket"
+  component: "../backend-socket"
   inputs:
     # roleName: ${permissions.name}
     name: ${service}-${version}-${stage}

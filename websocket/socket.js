@@ -9,6 +9,7 @@ const {
   setClass,
   getLeaderboard,
   updateRole,
+  mixpanel,
 } = require("./routes");
 
 const handler = require("./handler");
@@ -69,28 +70,81 @@ const schemas = {
     },
   ],
   joinClass: [
-    "{userId: String, classId: String, meetingId: String, name: String}",
+    `{
+      userId: String, 
+      classId: String, 
+      meetingId: String, 
+      name: String
+    }`,
   ],
   joinMeeting: [
-    "{meetingId: String, role: Role, userId: String, name: String, avatar: String}",
+    `{
+      meetingId: String, 
+      role: Role, 
+      userId: String, 
+      name: String, 
+      avatar: String
+    }`,
     {
       customTypes: RoleType,
     },
   ],
   respond: [
-    "{student: {name: String, id: String}, answerCrypt: String | Undefined, avatar: String | Null, questionId: String, meetingId: String, classId: String, response: String | Null | Number | [Boolean] | Boolean, askTimestamp: Date, respondTimestamp: Date}",
+    `{
+      student: {
+        name: String, 
+        id: String
+      }, 
+      answerCrypt: String | Undefined, 
+      avatar: String | Null, 
+      questionId: String, 
+      meetingId: String, 
+      classId: String, 
+      response: String | Null | Number | [Boolean] | Boolean, 
+      askTimestamp: Date, 
+      respondTimestamp: Date
+    }`,
     { customTypes: DateType },
   ],
-  setClass: ["{classId: String, userId: String, meetingId: String}"],
+  setClass: [
+    `{
+    classId: String, 
+    userId: String, 
+    meetingId: String
+  }`,
+  ],
   ping: ["*"],
   disconnect: [
-    "Undefined | {meetingId: String, role: Role, classId: String, userId: String}",
+    `Undefined | {
+      meetingId: String, 
+      role: Role, 
+      classId: String, 
+      userId: String
+    }`,
     { customTypes: RoleType },
   ],
   getLeaderboard: ["{meetingId: String}"],
   updateRole: [
-    "{prevRole: Role, newRole: Role, meetingId: String, userId: String, name :String, avatar: String}",
+    `{
+      prevRole: Role, 
+      newRole: Role, 
+      meetingId: String, 
+      userId: String, 
+      name: String, 
+      avatar: String
+    }`,
     { customTypes: RoleType },
+  ],
+  mixpanel: [
+    "{action: Action, id: String, properties: Object}",
+    {
+      customTypes: {
+        Action: {
+          typeOf: "String",
+          validate: (el) => ["track", "people"].includes(el),
+        },
+      },
+    },
   ],
 };
 
@@ -104,6 +158,7 @@ const redirect = {
   ping,
   getLeaderboard,
   updateRole,
+  mixpanel,
 };
 
 // TODO: Add route for changing roles, checking for teacher surrender role
@@ -129,4 +184,7 @@ on("getLeaderboard", async (..._) =>
 );
 on("updateRole", async (..._) =>
   handler(..._, redirect.updateRole, ...schemas.updateRole)
+);
+on("mixpanel", async (..._) =>
+  handler(..._, redirect.mixpanel, ...schemas.mixpanel)
 );

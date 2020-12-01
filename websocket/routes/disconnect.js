@@ -5,11 +5,8 @@ const { docClient } = require("../util");
  * @param {*} data
  * @param {*} socket
  */
-const disconnect = async (
-  { meetingId, role, userId, name, classId },
-  { id }
-) => {
-  if (!meetingId) {
+const disconnect = async (data, { id }) => {
+  if (data === undefined) {
     // eslint-disable-next-line no-console
     console.log(`Connection ${id} has disconnected forcefully`);
     return {
@@ -17,6 +14,7 @@ const disconnect = async (
       message: "You have forcefully disconnected. This is not recommended.",
     };
   }
+  const { meetingId, role, userId, name, classId } = data;
   const now = new Date().toISOString();
   const params = [
     {

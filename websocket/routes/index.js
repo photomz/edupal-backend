@@ -8,4 +8,5 @@ module.exports = {
   setClass: require("./setClass"),
   getLeaderboard: require("./getLeaderboard"),
   updateRole: require("./updateRole"),
+  mixpanel: require("./mixpanel"),
 };
