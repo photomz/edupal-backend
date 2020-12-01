@@ -53,7 +53,10 @@ const schemas = {
         text: String | Null
       }, 
       answer: String | Null | Number | [Boolean] | Boolean, 
-      meta: {optionNum: Number | Undefined, options: [String|Number] | Undefined}, 
+      meta: {
+        optionNum: Number | Undefined, 
+        options: [String|Number] | Undefined | Null
+      }, 
       askTimestamp: Date, 
       questionId: String
     }`,
