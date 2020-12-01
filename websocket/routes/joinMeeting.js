@@ -16,8 +16,10 @@ const joinMeeting = async (
 ) => {
   if (role === "TEACHER") {
     const teacherQuery = await doesTeacherExist(meetingId);
+        const skArr = teacherQuery[0].sk.split("#");
+        const teacherId = skArr[skArr.length - 1];
 
-    if (teacherQuery.length) {
+    if (teacherQuery.length && teacherId !== userId) {
       const payload = {
         action: "joinMeetingFailed",
         data: {
