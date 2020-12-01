@@ -1,5 +1,10 @@
+const isProd = process.env.stage === "prod";
+const isDev = process.env.stage === "dev";
+
 const mixpanel = require("../util/mixpanel/lib/mixpanel-node").init(
-  "163ddda22a51cddd2fcce948b3d8406d",
+  isProd
+    ? "bb91258d531fa5d286e2367a1bf873bc"
+    : isDev && "163ddda22a51cddd2fcce948b3d8406d",
   {
     protocol: "https",
   }

@@ -1,21 +1,27 @@
 {
   "name": "edupal-backend",
-  "version": "0.0.1",
-  "description": "Stride is a novel and redesigned fitness game for the youth and middle-aged alike.",
-  "main": "app.js",
-  "repository": "https://github.com/photomz/stride",
+  "version": "0.1.0",
+  "description": "Quick learning feedback during online lessons",
+  "main": "websocket/socket.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edu-pal/edupal-backend"
+  },
   "author": "Edu-pal Group <edupal.group@gmail.com>",
+  "contributors": [
+    "Markus Zhang <markuszhang8@gmail.com>"
+  ],
   "private": true,
   "dependencies": {
     "aws-sdk": "^2.736.0",
-    "axios": "^0.20.0",
+    "axios": "^0.21.0",
     "cryptojs": "^2.5.3",
+    "mixpanel": "^0.13.0",
     "type-check": "^0.4.0",
     "uuid": "^8.3.0"
   },
   "scripts": {
-    "dev": "nodemon app.js",
-    "start": "node app.js"
+    "deploy": "cd websocket && sls"
   },
   "devDependencies": {
     "aws-sdk-mock": "^5.1.0",

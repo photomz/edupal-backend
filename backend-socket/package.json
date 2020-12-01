@@ -1,0 +1,28 @@
+{
+  "name": "@serverless/backend-socket",
+  "version": "4.0.0",
+  "main": "./serverless.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --fix --cache"
+  },
+  "author": "Serverless, Inc.",
+  "license": "Apache",
+  "dependencies": {
+    "@serverless/aws-lambda": "^1.0.0",
+    "@serverless/aws-s3": "^2.0.0",
+    "@serverless/aws-websockets": "^1.0.0",
+    "@serverless/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "9.0.0",
+    "eslint": "5.6.0",
+    "eslint-config-prettier": "^3.6.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-prettier": "^3.0.1",
+    "prettier": "^1.15.3"
+  }
+}

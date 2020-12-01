@@ -15,6 +15,7 @@ websocketApi:
     timeout: 10
     env:
       db: ${database.name}
+      stage: ${stage}
       # Used for encrypting answers to questions nothing important so this is ok
       CRYPTO_SECRET: fweuhrfwJAHFJKAWFHkjaaswklfhads329807
     code:
