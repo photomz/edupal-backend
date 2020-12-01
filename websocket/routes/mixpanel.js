@@ -17,7 +17,6 @@ const mixpanel = require("../util/mixpanel/lib/mixpanel-node").init(
  * @param {*} socket
  */
 const mixpanelHandler = async ({ action, id, properties }, socket) => {
-  console.log(socket.ip);
   const props = { ...properties, $ip: socket.ip };
   // eslint-disable-next-line no-param-reassign
   switch (action) {

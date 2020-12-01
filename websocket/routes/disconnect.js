@@ -14,7 +14,7 @@ const disconnect = async (data, { id }) => {
       message: "You have forcefully disconnected. This is not recommended.",
     };
   }
-  const { meetingId, role, userId, name, classId } = data;
+  const { meetingId, role } = data;
   const now = new Date().toISOString();
   const params = [
     {
@@ -42,8 +42,6 @@ const disconnect = async (data, { id }) => {
 
   // TODO: Stream-like logic to funnel meeting data and update to class
   // TODO: Actual stream on activeConnections 0 trigger (with ReturnValue) for attendance
-  // eslint-disable-next-line no-console
-  console.log(`${userId} ${name} from ${classId} has disconnected gracefully`);
   // TODO: Cut websocket connection
   // TODO: Emit to teachers and student of disconnection
 
