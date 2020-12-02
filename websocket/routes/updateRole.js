@@ -12,23 +12,21 @@ const updateRole = async (
 ) => {
   if (newRole === "TEACHER") {
     const teacherQuery = await doesTeacherExist(meetingId);
-    const skArr = teacherQuery[0].sk.split("#");
-    const teacherId = skArr[skArr.length - 1];
 
-    if (teacherQuery.length && teacherId !== userId) {
-      const payload = {
-        action: "updateRoleFailed",
-        data: {
-          prevRole,
-          culprit: teacherQuery[0].name,
-        },
-      };
-      try {
-        await socket.send(JSON.stringify(payload), socket.id);
-      } catch {
-        // About to return error anyways
+    if (teacherQuery.length) {
+      const skArr = teacherQuery[0].sk.split("#");
+      const teacherId = skArr[skArr.length - 1];
+
+      if (teacherId !== userId) {
+        return {
+          statusCode: 404,
+          action: "updateRoleFailed",
+          data: {
+            prevRole,
+            culprit: teacherQuery[0].name,
+          },
+        };
       }
-      return { statusCode: 404 };
     }
   }
   const now = new Date().toISOString();
@@ -97,20 +95,12 @@ const updateRole = async (
     };
   }
 
-  const payload = {
+  return {
+    statusCode: 200,
     action: "updateRoleSuccess",
     data: {
       newRole,
     },
-  };
-  try {
-    await socket.send(JSON.stringify(payload), socket.id);
-  } catch (error) {
-    return { statusCode: 404 };
-  }
-
-  return {
-    statusCode: 200,
   };
 };
 

@@ -42,8 +42,6 @@ const disconnect = async (data, { id }) => {
 
   // TODO: Stream-like logic to funnel meeting data and update to class
   // TODO: Actual stream on activeConnections 0 trigger (with ReturnValue) for attendance
-  // TODO: Cut websocket connection
-  // TODO: Emit to teachers and student of disconnection
 
   return {
     message: `You have disconnected gracefully at ${now}`,

@@ -164,7 +164,6 @@ const redirect = {
   mixpanel,
 };
 
-// TODO: Add route for changing roles, checking for teacher surrender role
 on("disconnect", async (..._) =>
   handler(..._, redirect.disconnect, ...schemas.disconnect)
 );

@@ -17,16 +17,19 @@ const joinMeeting = async (
   let res = {};
   if (role === "TEACHER") {
     const teacherQuery = await doesTeacherExist(meetingId);
-    const skArr = teacherQuery[0].sk.split("#");
-    const teacherId = skArr[skArr.length - 1];
 
-    if (teacherQuery.length && teacherId !== userId) {
-      // Auto change to student if cannot join as teacher
-      // eslint-disable-next-line no-param-reassign
-      role = "STUDENT";
-      res = {
-        action: "joinMeetingAsStudent",
-      };
+    if (teacherQuery.length) {
+      const skArr = teacherQuery[0].sk.split("#");
+      const teacherId = skArr[skArr.length - 1];
+
+      if (teacherId !== userId) {
+        // Auto change to student if cannot join as teacher
+        // eslint-disable-next-line no-param-reassign
+        role = "STUDENT";
+        res = {
+          action: "joinMeetingAsStudent",
+        };
+      }
     }
   }
 
@@ -116,15 +119,6 @@ const joinMeeting = async (
     };
   }
 
-  try {
-    await socket.send(
-      JSON.stringify({ action: "joinMeetingSuccess" }),
-      socket.id
-    );
-  } catch (error) {
-    return { statusCode: 404 };
-  }
-
   if (classId !== "null") {
     const payload = { action: "getClass", data: { classId } };
     try {
@@ -136,6 +130,7 @@ const joinMeeting = async (
 
   return {
     statusCode: 200,
+    action: "joinMeetingSuccess",
     ...res,
   };
 };

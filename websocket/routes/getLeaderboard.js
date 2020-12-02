@@ -5,7 +5,7 @@ const { docClient } = require("../util");
  * @param {*} data
  * @param {*} socket
  */
-const getLeaderboard = async ({ meetingId }, socket) => {
+const getLeaderboard = async ({ meetingId }) => {
   const leaderboardParams = {
     TableName: process.env.db,
     IndexName: "LeaderboardIndex",
@@ -44,19 +44,10 @@ const getLeaderboard = async ({ meetingId }, socket) => {
     })
   );
 
-  const payload = { action: "receiveLeaderboard", data };
-  try {
-    await socket.send(JSON.stringify(payload), socket.id);
-  } catch (error) {
-    return {
-      statusCode: 404,
-      reason: "Error at socket.send, client disconnected",
-      error,
-    };
-  }
-
   return {
     statusCode: 200,
+    action: "receiveLeaderboard",
+    data,
   };
 };
 

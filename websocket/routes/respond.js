@@ -185,12 +185,11 @@ const respond = async (
     // eslint-disable-next-line no-console
     console.info(`socket.sends failed for ${disconnectedIds}`);
 
-  await socket.send(JSON.stringify(responderPayload), socket.id);
-
   await Promise.all(emitPromises);
 
   return {
     statusCode: 200,
+    ...responderPayload,
   };
 };
 
