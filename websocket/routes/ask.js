@@ -126,8 +126,10 @@ const ask = async (
   return {
     statusCode: 200,
     action: "numStudents",
-    questionId,
-    numStudents,
+    data: {
+      questionId,
+      numStudents,
+    },
   };
 };
 

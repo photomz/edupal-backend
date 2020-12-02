@@ -1,4 +1,4 @@
-const { docClient, doesTeacherExist } = require("../util");
+const { docClient, doesTeacherExist, allSettled } = require("../util");
 
 /**
  * Automatically triggered upon entering Google Meet meeting
@@ -90,7 +90,7 @@ const joinMeeting = async (
   ];
 
   try {
-    await Promise.all(batchConditionalPut);
+    await allSettled(batchConditionalPut);
   } catch (error) {
     // Conditional request expected to fail when not init
     if (error.message !== "The conditional request failed")

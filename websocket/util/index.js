@@ -90,9 +90,29 @@ const doesTeacherExist = async (meetingId) =>
       .promise()
   ).Items;
 
+/**
+ * Polyfill for Promise.allSettled which only supports Node 12.9+
+ * @param {*} promises
+ */
+const allSettled = (promises) =>
+  Promise.all(
+    promises.map((p) =>
+      p
+        .then((value) => ({
+          status: "fulfilled",
+          value,
+        }))
+        .catch((reason) => ({
+          status: "rejected",
+          reason,
+        }))
+    )
+  );
+
 module.exports = {
   docClient,
   queryUsers,
   emitForEach,
   doesTeacherExist,
+  allSettled,
 };
