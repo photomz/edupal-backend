@@ -2,7 +2,7 @@ service: edupal-backend
 app: edupal
 org: photonmz
 version: v0.2
-stage: dev
+stage: prod
 region: ap-southeast-1
 
 websocketApi:
