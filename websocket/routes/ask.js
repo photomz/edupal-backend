@@ -94,8 +94,7 @@ const ask = async (
     },
   };
 
-  const disconnectedIds = [];
-
+  let numStudents = 0;
   const emitPromises = connections
     .filter((el) => el !== `CONN#STUDENT#${socket.id}`)
     .map(({ sk: el }) =>
@@ -107,15 +106,12 @@ const ask = async (
             ),
             userId
           );
-        } catch (error) {
-          disconnectedIds.push(userId);
+          numStudents += 1;
+        } catch {
+          /// User forcefully disconnected
         }
       })(el.split("#")[1], el.split("#")[2])
     );
-
-  if (disconnectedIds.length)
-    // eslint-disable-next-line no-console
-    console.info(`socket.sends failed for ${disconnectedIds}`);
 
   try {
     await Promise.all(emitPromises);
@@ -129,6 +125,9 @@ const ask = async (
 
   return {
     statusCode: 200,
+    action: "numStudents",
+    questionId,
+    numStudents,
   };
 };
 
