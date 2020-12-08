@@ -14,7 +14,6 @@ const joinMeeting = async (
   { meetingId, role, userId, name, avatar },
   socket
 ) => {
-  let res = {};
   if (role === "TEACHER") {
     const teacherQuery = await doesTeacherExist(meetingId);
 
@@ -26,9 +25,6 @@ const joinMeeting = async (
         // Auto change to student if cannot join as teacher
         // eslint-disable-next-line no-param-reassign
         role = "STUDENT";
-        res = {
-          action: "joinMeetingAsStudent",
-        };
       }
     }
   }
@@ -131,7 +127,7 @@ const joinMeeting = async (
   return {
     statusCode: 200,
     action: "joinMeetingSuccess",
-    ...res,
+    data: { role },
   };
 };
 
